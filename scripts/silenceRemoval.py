@@ -32,7 +32,12 @@ else:
 
 # here's a definition we can use again and again to remove silences with FFMPEG. 
 
+unprocessed_size = 0
+processed_size = 0
+
 def removeSilences(inputPath, outputPath, minimum_silence_duration, silence_threshold, ffmpeg_path):
+    global unprocessed_size
+    global processed_size
     
     call_ffmpeg = [
         ffmpeg_path,
@@ -47,6 +52,10 @@ def removeSilences(inputPath, outputPath, minimum_silence_duration, silence_thre
     ]    
 
     subprocess.call(call_ffmpeg)
+
+    unprocessed_size = unprocessed_size + os.path.getsize(inputPath)
+    processed_size = processed_size + os.path.getsize(outputPath)
+
 
 # here we loop through directories supplied with input_folder, recreate the folder structure and run the process on each audio file that it finds
 
@@ -64,3 +73,7 @@ for root, dirs, files in os.walk(input_folder):
             print(output_file_name)
             # if is an audio file, run the process
             removeSilences(input_file_path, output_file_name, duration, thresh, ffmpeg_path)
+
+
+silence_percentage_removed = processed_size / unprocessed_size 
+print("Removed " + str(int(100 - silence_percentage_removed * 100)) + "% of dataset.")
