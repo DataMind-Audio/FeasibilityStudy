@@ -40,7 +40,7 @@ bitdepth='PCM_16'
 
 # create output directory for pitch shifted files if it doesn't already exist
 
-if args.output == None:
+if args.output == "None":
     output_folder = os.path.join(input_folder, 'scrunchedLibrary')
     print(output_folder)
     if not os.path.exists(output_folder):
