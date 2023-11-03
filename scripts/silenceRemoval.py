@@ -11,7 +11,7 @@ args = parser.parse_args()
 if args.ffmpegpath == None:
     ffmpeg_path='ffmpeg' 
 else:
-    ffmpeg_path=arg.ffmpegpath 
+    ffmpeg_path=args.ffmpegpath 
 
 # now sort the other arguments 
 
@@ -20,7 +20,7 @@ duration=args.silenceduration
 input_folder=args.input
 extension='wav'
 # make an output folder if it doesn't exist 
-if args.output == None:
+if args.output == 'None':
     output_folder = os.path.join(input_folder, 'silenceStrippedResults')
     print(output_folder)
     if not os.path.exists(output_folder):
@@ -61,7 +61,7 @@ def removeSilences(inputPath, outputPath, minimum_silence_duration, silence_thre
 
 for root, dirs, files in os.walk(input_folder):
     for file in files:
-        if file.endswith(('.mp3', '.wav', '.flac', '.aiff', '.aif', '.WAV', '.AIF', '.AIFF')):
+        if file.endswith(('.mp3', '.wav', '.flac', '.aiff', '.aif', '.WAV', '.AIF', '.AIFF')) and not file.startswith(('.')):
             input_file_path = os.path.join(root, file)
             print(input_file_path)
             relative_path = os.path.relpath(input_file_path, input_folder)
@@ -72,7 +72,11 @@ for root, dirs, files in os.walk(input_folder):
             output_file_name = os.path.join(output_folder_path, f'{os.path.splitext(file)[0]}_scrunched.{extension}')
             print(output_file_name)
             # if is an audio file, run the process
-            removeSilences(input_file_path, output_file_name, duration, thresh, ffmpeg_path)
+            try:
+                removeSilences(input_file_path, output_file_name, duration, thresh, ffmpeg_path)
+            except:
+                print("Error loading: " + output_file_name )
+                continue
 
 
 silence_percentage_removed = processed_size / unprocessed_size 
