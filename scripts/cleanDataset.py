@@ -1,4 +1,4 @@
-import os, argparse
+import os, argparse, subprocess
 import librosa
 import soundfile as sf
 
@@ -8,6 +8,7 @@ def clean(source_folder, destination_folder):
 
     total_size = 0
     processed_size = 0
+    silence_removed = 0
 
     for root, _, files in os.walk(source_folder):
         for file in files:
@@ -19,6 +20,7 @@ def clean(source_folder, destination_folder):
     print(f"Cleaning dataset...")
 
     idx = 0
+    ffmpeg_logs = open("ffmpeg_log.txt", "w")
 
     for root, _, files in os.walk(source_folder):
         for file in files:
@@ -32,7 +34,7 @@ def clean(source_folder, destination_folder):
                 try:
                     audio_data, sr = sf.read(source_path)
                 except:
-                    print("File " + source_path + " couldn't be read.")
+                    print("Error cleaning file.")
                     continue
 
                 # Convert to mono
@@ -46,12 +48,38 @@ def clean(source_folder, destination_folder):
                 audio_data = (audio_data * 32767).astype("int16")
                 
                 # Save file to new location
-                sf.write(destination_path, audio_data, samplerate=44100, format="wav", subtype="PCM_16")
+                temp_file_name = destination_path + ".tmp"
+                sf.write(temp_file_name, audio_data, samplerate=44100, format="wav", subtype="PCM_16")
 
                 processed_size = processed_size + os.path.getsize(source_path)
-                idx = idx + 1
-                print("Processed " + str(int(processed_size / total_size * 100)) + "%", end="\r")
 
+                # Remove silence
+                call_ffmpeg = [
+                    "ffmpeg",
+                    '-i',
+                    temp_file_name,
+                    '-af',
+                    f'silenceremove=stop_periods=-1:stop_duration={3}:stop_threshold={-60}dB',
+                    '-ac',
+                    '1',
+                    destination_path,
+                    '-y'
+                ] 
+
+                subprocess.call(call_ffmpeg, stderr=ffmpeg_logs)
+
+                silence_removed = silence_removed + os.path.getsize(temp_file_name) - os.path.getsize(destination_path) 
+
+                os.remove(temp_file_name)
+
+                print(
+                    "Processed " + str(int(processed_size / total_size * 100)) + "%" + 
+                    "          " + str(int(silence_removed / total_size  * 100)) + "% of dataset was silence.", end="\r"
+                )
+
+                idx = idx + 1
+
+    os.remove("ffmpeg_log.txt")
     print(f"\nDone.")
 
 
