@@ -18,12 +18,15 @@ def clean(source_folder, destination_folder):
     
     print(f"Cleaning dataset...")
 
+    idx = 0
+
     for root, _, files in os.walk(source_folder):
         for file in files:
             if file.endswith(("wav", "opus", "mp3", "aac", "flac")) and not file.startswith("."):
                 source_path = os.path.join(root, file)
 
                 file = file.split(".")[0] + ".wav"
+                file = str(idx).zfill(8) + "_" + file
                 destination_path = os.path.join(destination_folder, file)
 
                 try:
@@ -46,6 +49,7 @@ def clean(source_folder, destination_folder):
                 sf.write(destination_path, audio_data, samplerate=44100, format="wav", subtype="PCM_16")
 
                 processed_size = processed_size + os.path.getsize(source_path)
+                idx = idx + 1
                 print("Processed " + str(int(processed_size / total_size * 100)) + "%", end="\r")
 
     print(f"\nDone.")

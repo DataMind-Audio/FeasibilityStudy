@@ -17,7 +17,6 @@ if __name__ == "__main__":
         ffmpeg_path=args.ffmpegpath 
 
     # now sort the other arguments 
-
     thresh=args.threshold
     duration=args.silenceduration
     input_folder=args.input
