@@ -9,7 +9,6 @@ def clean(source_folder, destination_folder):
     total_size = 0
     processed_size = 0
 
-    # Walk through the directory and its subdirectories
     for root, _, files in os.walk(source_folder):
         for file in files:
             if file.endswith(("wav", "opus", "mp3", "aac", "flac")):
