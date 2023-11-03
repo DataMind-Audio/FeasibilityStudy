@@ -168,7 +168,14 @@ def main():
             label_str = '-'.join(label_strs)
             label_str = label_str.replace(" ", "_")
             basename = os.path.basename(audio_path)
+            basename = basename.replace('.wav', '')
             output_filename = f"{label_str}_____{basename}"
+
+            if len(output_filename) > 250:
+                output_filename = output_filename[0:250]
+
+            output_filename += ".wav"
+
             print(f"Tagged {file_index}/{file_count}: {basename} -> {output_filename}")
 
             output_path = os.path.join(output_dir, output_filename)
