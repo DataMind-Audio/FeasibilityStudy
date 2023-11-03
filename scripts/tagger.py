@@ -168,7 +168,7 @@ def main():
             label_str = '-'.join(label_strs)
             label_str = label_str.replace(" ", "_")
             basename = os.path.basename(audio_path)
-            output_filename = f"{file_index}__{label_str}_____{basename}"
+            output_filename = f"{label_str}_____{basename}"
             print(f"Tagged {file_index}/{file_count}: {basename} -> {output_filename}")
 
             output_path = os.path.join(output_dir, output_filename)
