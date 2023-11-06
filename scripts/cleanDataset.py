@@ -1,6 +1,7 @@
 import os, argparse, subprocess
 import librosa
 import soundfile as sf
+import time
 
 
 def clean(source_folder, destination_folder):
@@ -82,6 +83,8 @@ def clean(source_folder, destination_folder):
     os.remove("ffmpeg_log.txt")
     print(f"\nDone.")
 
+    
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -105,6 +108,11 @@ if __name__ == "__main__":
     if not os.path.exists(destination_folder):
       os.makedirs(destination_folder)
 
+    start = time.time()
+
     clean(source_folder, destination_folder)
+
+    end = time.time()
+    print("Process took " + str(int(end - start)) + " seconds.")
     
     
