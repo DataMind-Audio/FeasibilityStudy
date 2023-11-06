@@ -6,6 +6,7 @@ import json
 import csv
 import numpy as np
 import librosa
+import time
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -41,6 +42,9 @@ def move_data_to_device(x, device):
     return x.to(device)
 
 def main():
+
+    main_start = time.time()
+
     input_dir = args.input
     output_dir = args.output
     label_count = args.labels
@@ -115,9 +119,9 @@ def main():
                 file_count += 1
 
     file_index = 0
+    dataset_seconds = 0.0
     for root, dirs, files in os.walk(input_dir):
         for file in files:
-            file_index += 1
             if not file.lower().endswith('.wav'):
                 continue
 
@@ -128,6 +132,11 @@ def main():
             if len(waveform) == 0:
                 print(f"Cannot read {audio_path} due to a bug in librosa", file=sys.stderr)
                 continue
+
+            file_index += 1
+
+            audio_duration = waveform.shape[0] / sample_rate # in seconds
+            dataset_seconds += audio_duration # in hours
 
             waveform = waveform[None, :]    # (1, audio_length)
             waveform = move_data_to_device(waveform, device)
@@ -199,6 +208,10 @@ def main():
                 file.close()
                 print(f"Metadata -> {metadata_path}")
 
+    main_end = time.time()
+
+    main_time = main_end - main_start
+    print(f"Tagging {dataset_seconds:.1f} seconds of data took {main_time:.1f} seconds")
     return
 
 
