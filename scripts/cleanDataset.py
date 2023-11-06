@@ -1,4 +1,5 @@
 import os, argparse, subprocess
+import zipfile
 import time
 
 
@@ -15,6 +16,15 @@ class Cleaner():
 
         self.ffmpeg_logs = 0
         self.formats = ("wav", "opus", "mp3", "aac", "flac")
+        self.expand_zip()
+
+    def expand_zip(self):
+        for root, _, files in os.walk(self.source):
+            for file in files:
+                if file.endswith(".zip"):
+                    with zipfile.ZipFile(os.path.join(root, file), "r") as zip_ref:
+                        file = file[:-4]
+                        zip_ref.extractall(os.path.join(root, file))
 
     def get_dataset_size(self, source_folder):
         size = 0
