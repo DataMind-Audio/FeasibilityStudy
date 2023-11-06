@@ -16,6 +16,7 @@ class Cleaner():
 
         self.ffmpeg_logs = 0
         self.formats = ("wav", "opus", "mp3", "aac", "flac")
+        self.procs = []
         self.expand_zip()
 
     def expand_zip(self):
@@ -57,6 +58,10 @@ class Cleaner():
         for root, _, files in os.walk(self.source):
             for file in files:
                 self.process_audio(root, file, idx)
+        
+        print(f"Waiting for {len(self.procs)} processes to finish...", end="")
+        for p in self.procs:
+            p.wait()
 
         os.remove("ffmpeg_log.txt")
         print(f"\nDone.")
@@ -87,10 +92,19 @@ class Cleaner():
                 destination_path,
             ]
 
-            try: 
-                subprocess.call(call_ffmpeg, stderr=self.ffmpeg_logs)
-            except:
-                print("Error processing " + source_path + ". Skipping.")
+            p = subprocess.Popen(call_ffmpeg, stderr=self.ffmpeg_logs)
+            self.procs.append(p)
+
+            max_procs = 32
+            while len(self.procs) >= max_procs:
+                for p in self.procs:
+                    p.wait()
+                    self.procs.remove(p)
+                    break
+
+            for p in self.procs:
+                if p.poll() is not None:
+                    self.procs.remove(p)
 
             idx = idx + 1
         
