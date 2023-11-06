@@ -46,6 +46,7 @@ def main(args):
                     for p in procs:
                         print(f"More than {max_procs} processes running (len(procs)), waiting for one to finish...")
                         p.wait()
+                        procs.remove(p)
                         break
 
                 for p in procs:
