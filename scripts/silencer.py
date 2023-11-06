@@ -7,6 +7,8 @@ import subprocess
 def main(args):
     procs = []
 
+    os.makedirs(args.output, exist_ok=True)
+
     log = subprocess.DEVNULL
     if args.logfile:
         log = open(args.logfile, "a")
@@ -44,7 +46,7 @@ def main(args):
                 max_procs = 32
                 while len(procs) >= max_procs:
                     for p in procs:
-                        print(f"More than {max_procs} processes running (len(procs)), waiting for one to finish...")
+                        print(f"More than {max_procs} processes running {len(procs)}, waiting for one to finish...")
                         p.wait()
                         procs.remove(p)
                         break
@@ -69,7 +71,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input', type=str, help='Input directory', required=True)
-    parser.add_argument('-o', '--output', type=str, help='Output directory', required=True)
+    parser.add_argument('-o', '--output', type=str, help="Output directory. Created if it doesn't exist", required=True)
     parser.add_argument('-d', '--duration', type=float, help='Minimum silence duration in seconds', default=3.0)
     parser.add_argument('-t', '--threshold', type=float, help='Threshold for silence in dB', default=-60.0)
     parser.add_argument('--logfile', type=str, help='Path to log file', default=None)
