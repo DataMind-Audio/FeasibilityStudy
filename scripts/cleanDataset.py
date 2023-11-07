@@ -5,12 +5,14 @@ import soundfile as sf
 
 
 class Cleaner():
-    def __init__(self, source, destination):
+    def __init__(self, source, destination, expand=False):
         self.source = source
         self.destination = destination
 
         self.start_time = 0
         self.end_time = 0
+
+        self.expand = expand
 
         self.unprocessed_size = 0
         self.processed_size = 0
@@ -174,11 +176,18 @@ class Cleaner():
 
             audio, sr = sf.read(source_path, always_2d=True)
 
-            config_offset = 0
+            start = 0
+            end = 6
+
             if audio[1].size == 1:
-                config_offset = 2
+                start = 2
+                end = 4
             
-            for config in range(config_offset, 6 - config_offset):
+            if self.expand == False:
+                start = 0
+                end = 1 
+            
+            for config in range(start, end):
                 p = subprocess.Popen(self.get_ffmpeg_call(source_path, destination_path, config), stderr=self.ffmpeg_logs)
                 self.procs.append(p)
 
@@ -206,27 +215,19 @@ class Cleaner():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--input', type=str, help='input dataset folder', default='None')
-    parser.add_argument('-o', '--output', type=str, help='output dataset folder', default='None')
+    parser.add_argument('-i', '--input', type=str, help='input dataset folder', required=True)
+    parser.add_argument('-o', '--output', type=str, help='output dataset folder', required=True)
+    parser.add_argument('-e', '--expand', type=bool, help="extracts channels and flips phase", default=False)
     args = parser.parse_args()
 
-    source_folder = ""
-    destination_folder = ""
-
-    if args.input != "None":
-        source_folder = args.input
-    else:
-        raise Exception("No input provided.")
-
-    if args.output != "None":
-        destination_folder = args.output
-    else:
-        destination_folder = source_folder + "_processed"
+    source_folder = args.input
+    destination_folder = args.output
+    expand = args.expand
     
     if not os.path.exists(destination_folder):
       os.makedirs(destination_folder)
 
-    cleaner = Cleaner(source_folder, destination_folder)
+    cleaner = Cleaner(source_folder, destination_folder, expand)
     cleaner.clean()
     cleaner.log_results()
 
