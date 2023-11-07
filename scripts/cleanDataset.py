@@ -1,6 +1,7 @@
 import os, argparse, subprocess
 import zipfile
 import time
+import soundfile as sf
 
 
 class Cleaner():
@@ -42,6 +43,100 @@ class Cleaner():
         size = self.get_dataset_size(source_folder)
         length = size / (sample_rate * 2)
         return length
+    
+    def get_ffmpeg_call(self, source_path, destination_path, config):
+        # Sum to mono
+        if config == 0:
+            destination_path = destination_path[:-4] + "_sumToMono" + destination_path[-4:]
+            call = [
+                "ffmpeg",
+                "-i",
+                source_path,
+                "-af",
+                f'pan=mono|c0=c0+c1,silenceremove=stop_periods=-1:stop_duration={3}:stop_threshold={-60}dB',
+                '-c:a',
+                'pcm_s16le',
+                "-y",
+                destination_path
+            ]
+
+        # Sum to mono and invert phase
+        elif config == 1:
+            destination_path = destination_path[:-4] + "_sumToMonoPhaseInv" + destination_path[-4:]
+            call = [
+                "ffmpeg",
+                "-i",
+                source_path,
+                "-af",
+                f'pan=mono|c0=c0+c1,aeval=-val(0),silenceremove=stop_periods=-1:stop_duration={3}:stop_threshold={-60}dB',
+                '-c:a',
+                'pcm_s16le',
+                "-y",
+                destination_path
+            ]
+
+        # Take left channel
+        elif config == 2:
+            destination_path = destination_path[:-4] + "_left" + destination_path[-4:]
+            call = [
+                "ffmpeg",
+                "-i",
+                source_path,
+                "-af",
+                f'pan=mono|c0=c0,aeval=silenceremove=stop_periods=-1:stop_duration={3}:stop_threshold={-60}dB',
+                '-c:a',
+                'pcm_s16le',
+                "-y",
+                destination_path
+            ]
+        
+        # Take left channel and invert phase
+        elif config == 3:
+            destination_path = destination_path[:-4] + "_leftInv" + destination_path[-4:]
+            call = [
+                "ffmpeg",
+                "-i",
+                source_path,
+                "-af",
+                f'pan=mono|c0=c0,aeval=-val(0),silenceremove=stop_periods=-1:stop_duration={3}:stop_threshold={-60}dB',
+                '-c:a',
+                'pcm_s16le',
+                "-y",
+                destination_path
+            ]
+        
+        # Take right channel
+        elif config == 4:
+            destination_path = destination_path[:-4] + "_right" + destination_path[-4:]
+            call = [
+                "ffmpeg",
+                "-i",
+                source_path,
+                "-af",
+                f'pan=mono|c0=c1,silenceremove=stop_periods=-1:stop_duration={3}:stop_threshold={-60}dB',
+                '-c:a',
+                'pcm_s16le',
+                "-y",
+                destination_path
+            ]
+        
+        # Take right channel and invert phase
+        elif config == 5:
+            destination_path = destination_path[:-4] + "_rightInv" + destination_path[-4:]
+            call = [
+                "ffmpeg",
+                "-i",
+                source_path,
+                "-af",
+                f'pan=mono|c0=c1,aeval=-val(0),silenceremove=stop_periods=-1:stop_duration={3}:stop_threshold={-60}dB',
+                '-c:a',
+                'pcm_s16le',
+                "-y",
+                destination_path
+            ]
+        
+        return call
+        
 
     def clean(self):
         print("Calculating dataset size...")
@@ -77,38 +172,30 @@ class Cleaner():
             file = str(idx).zfill(8) + "_" + file
             destination_path = os.path.join(self.destination, file)
 
-            # Remove silence
-            call_ffmpeg = [
-                "ffmpeg",
-                '-i',
-                source_path,
-                '-af',
-                f'silenceremove=stop_periods=-1:stop_duration={3}:stop_threshold={-60}dB',
-                '-ac',
-                '1', 
-                '-c:a',
-                'pcm_s16le', 
-                '-y',
-                destination_path,
-            ]
+            audio, sr = sf.read(source_path, always_2d=True)
 
-            p = subprocess.Popen(call_ffmpeg, stderr=self.ffmpeg_logs)
-            self.procs.append(p)
+            config_offset = 0
+            if audio[1].size == 1:
+                config_offset = 2
+            
+            for config in range(config_offset, 6 - config_offset):
+                p = subprocess.Popen(self.get_ffmpeg_call(source_path, destination_path, config), stderr=self.ffmpeg_logs)
+                self.procs.append(p)
 
-            max_procs = 32
-            while len(self.procs) >= max_procs:
+                max_procs = 32
+                while len(self.procs) >= max_procs:
+                    for p in self.procs:
+                        p.wait()
+                        self.procs.remove(p)
+                        break
+
                 for p in self.procs:
-                    p.wait()
-                    self.procs.remove(p)
-                    break
+                    if p.poll() is not None:
+                        self.procs.remove(p)
 
-            for p in self.procs:
-                if p.poll() is not None:
-                    self.procs.remove(p)
-
-            idx = idx + 1
-        
-        print("Processed " + str(int(self.processed_size / self.unprocessed_size * 100)) + "%", end="\r")
+                idx = idx + 1
+            
+            print("Processed " + str(int(self.processed_size / self.unprocessed_size * 100)) + "%", end="\r")
 
     
     def log_results(self):
