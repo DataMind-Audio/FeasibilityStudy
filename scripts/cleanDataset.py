@@ -157,7 +157,7 @@ class Cleaner():
 
         for root, _, files in os.walk(self.source):
             for file in files:
-                self.process_audio(root, file, idx)
+                idx = self.process_audio(root, file, idx)
         
         print(f"Waiting for {len(self.procs)} processes to finish...", end="")
         for p in self.procs:
@@ -203,8 +203,11 @@ class Cleaner():
                         self.procs.remove(p)
 
                 idx = idx + 1
+
             
             print("Processed " + str(int(self.processed_size / self.unprocessed_size * 100)) + "%", end="\r")
+
+        return idx
 
     
     def log_results(self):
