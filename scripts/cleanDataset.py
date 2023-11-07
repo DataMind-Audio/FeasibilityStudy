@@ -9,6 +9,9 @@ class Cleaner():
         self.source = source
         self.destination = destination
 
+        self.silence_threshhold = -70
+        self.silence_duration = 3
+
         self.start_time = 0
         self.end_time = 0
 
@@ -55,7 +58,7 @@ class Cleaner():
                 "-i",
                 source_path,
                 "-af",
-                f'pan=mono|c0=c0+c1,silenceremove=stop_periods=-1:stop_duration={3}:stop_threshold={-60}dB',
+                f'pan=mono|c0=c0+c1,silenceremove=stop_periods=-1:stop_duration={self.silence_duration}:stop_threshold={self.silence_threshhold}dB',
                 '-c:a',
                 'pcm_s16le',
                 "-y",
@@ -70,7 +73,7 @@ class Cleaner():
                 "-i",
                 source_path,
                 "-af",
-                f'pan=mono|c0=c0+c1,aeval=-val(0),silenceremove=stop_periods=-1:stop_duration={3}:stop_threshold={-60}dB',
+                f'pan=mono|c0=c0+c1,aeval=-val(0),silenceremove=stop_periods=-1:stop_duration={self.silence_duration}:stop_threshold={self.silence_threshhold}dB',
                 '-c:a',
                 'pcm_s16le',
                 "-y",
@@ -85,7 +88,7 @@ class Cleaner():
                 "-i",
                 source_path,
                 "-af",
-                f'pan=mono|c0=c0,aeval=silenceremove=stop_periods=-1:stop_duration={3}:stop_threshold={-60}dB',
+                f'pan=mono|c0=c0,silenceremove=stop_periods=-1:stop_duration={self.silence_duration}:stop_threshold={self.silence_threshhold}dB',
                 '-c:a',
                 'pcm_s16le',
                 "-y",
@@ -100,7 +103,7 @@ class Cleaner():
                 "-i",
                 source_path,
                 "-af",
-                f'pan=mono|c0=c0,aeval=-val(0),silenceremove=stop_periods=-1:stop_duration={3}:stop_threshold={-60}dB',
+                f'pan=mono|c0=c0,aeval=-val(0),silenceremove=stop_periods=-1:stop_duration={self.silence_duration}:stop_threshold={self.silence_threshhold}dB',
                 '-c:a',
                 'pcm_s16le',
                 "-y",
@@ -115,7 +118,7 @@ class Cleaner():
                 "-i",
                 source_path,
                 "-af",
-                f'pan=mono|c0=c1,silenceremove=stop_periods=-1:stop_duration={3}:stop_threshold={-60}dB',
+                f'pan=mono|c0=c1,silenceremove=stop_periods=-1:stop_duration={self.silence_duration}:stop_threshold={self.silence_threshhold}dB',
                 '-c:a',
                 'pcm_s16le',
                 "-y",
@@ -130,7 +133,7 @@ class Cleaner():
                 "-i",
                 source_path,
                 "-af",
-                f'pan=mono|c0=c1,aeval=-val(0),silenceremove=stop_periods=-1:stop_duration={3}:stop_threshold={-60}dB',
+                f'pan=mono|c0=c1,aeval=-val(0),silenceremove=stop_periods=-1:stop_duration={self.silence_duration}:stop_threshold={self.silence_threshhold}dB',
                 '-c:a',
                 'pcm_s16le',
                 "-y",
@@ -176,18 +179,15 @@ class Cleaner():
 
             audio, sr = sf.read(source_path, always_2d=True)
 
-            start = 0
             end = 6
 
             if audio[1].size == 1:
-                start = 2
-                end = 4
+                end =  2
             
             if self.expand == False:
-                start = 0
                 end = 1 
             
-            for config in range(start, end):
+            for config in range(0, end):
                 p = subprocess.Popen(self.get_ffmpeg_call(source_path, destination_path, config), stderr=self.ffmpeg_logs)
                 self.procs.append(p)
 
@@ -217,12 +217,16 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input', type=str, help='input dataset folder', required=True)
     parser.add_argument('-o', '--output', type=str, help='output dataset folder', required=True)
-    parser.add_argument('-e', '--expand', type=bool, help="extracts channels and flips phase", default=False)
+    parser.add_argument('-e', '--expand', type=str, help="extracts channels and flips phase", default="n")
     args = parser.parse_args()
 
     source_folder = args.input
     destination_folder = args.output
-    expand = args.expand
+    
+    expand = False
+
+    if args.expand == "y":
+        expand = True
     
     if not os.path.exists(destination_folder):
       os.makedirs(destination_folder)
