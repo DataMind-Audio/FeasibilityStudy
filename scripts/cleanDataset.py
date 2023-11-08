@@ -153,7 +153,7 @@ class Cleaner():
         print(f"Cleaning dataset...")
 
         idx = 0
-        self.ffmpeg_logs = open("ffmpeg_log.txt", "w")
+        self.ffmpeg_logs = open("ffmpeg_log.txt", "w") 
 
         for root, _, files in os.walk(self.source):
             for file in files:
@@ -162,7 +162,7 @@ class Cleaner():
         print(f"Waiting for {len(self.procs)} processes to finish...", end="")
         for p in self.procs:
             p.wait()
-
+        self.ffmpeg_logs.close()
         os.remove("ffmpeg_log.txt")
         print(f"\nDone.")
 
