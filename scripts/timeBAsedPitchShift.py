@@ -7,7 +7,7 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-i', '--input', type=str, help='provide a folder of sound files', default='none')
-parser.add_argument ('-p', '--pitches', type=int, nargs='*', help="supply pitch")
+parser.add_argument ('-p', '--pitches', type=int, help="supply pitch")
 parser.add_argument('-o', '--output', type=str, help='select output type', default='wav')
 args = parser.parse_args()
 
