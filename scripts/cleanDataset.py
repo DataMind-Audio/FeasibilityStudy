@@ -21,7 +21,7 @@ class Cleaner():
         self.processed_size = 0
 
         self.ffmpeg_logs = 0
-        self.formats = ("wav", "opus", "mp3", "aac", "flac")
+        self.formats = ("wav", "opus", "mp3", "aac", "flac", "aiff", "aif")
         self.procs = []
         self.expand_zip()
 
