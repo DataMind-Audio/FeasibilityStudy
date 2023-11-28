@@ -3,6 +3,7 @@
 import os, time
 import argparse
 import subprocess
+import multiprocessing
 
 def main(args):
     procs = []
@@ -43,7 +44,7 @@ def main(args):
                 p = subprocess.Popen(ffmpeg_args, stdout=log, stderr=log)
                 procs.append(p)
 
-                max_procs = 32
+                max_procs = multiprocessing.cpu_count()
                 while len(procs) >= max_procs:
                     for p in procs:
                         print(f"More than {max_procs} processes running {len(procs)}, waiting for one to finish...")
@@ -53,7 +54,7 @@ def main(args):
 
                 for p in procs:
                     if p.poll() is not None:
-                        print("Process {p} finished")
+                        print(f"Process {p} finished")
                         procs.remove(p)
 
     print(f"Waiting for {len(procs)} processes to finish...", end="")
