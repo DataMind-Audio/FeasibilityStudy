@@ -61,7 +61,7 @@ def write_silence_file(path, size, level):
 
 
 def main(args):
-    size = args.size * 1000 ** 3 # convert GB to bytes
+    size = args.size * 1024 ** 3 # convert GiB to bytes
 
     remaining = size
     file_id = 0
@@ -83,7 +83,7 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser();
-    parser.add_argument('-s', '--size', type=float, help='size in GB of silence file', required=True)
+    parser.add_argument('-s', '--size', type=float, help='size in GiB of silence file', required=True)
     parser.add_argument('-o', '--output', type=str, help='output file name', required=True)
     parser.add_argument('-l', '--level', type=float, help='max level of silence in dB', default=-50)
     args = parser.parse_args()
