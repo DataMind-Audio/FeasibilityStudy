@@ -20,7 +20,8 @@ def main(args):
         for file in files:
             if file.lower().endswith(('.mp3', '.wav', '.flac', '.aiff', '.aif')):
                 in_path = os.path.join(root, file)
-                out_path = os.path.join(args.output, f"{file_id:05d}_{file}")
+                file_no_ext = os.path.splitext(file)[0]
+                out_path = os.path.join(args.output, f"{file_id:05d}_{file_no_ext}.wav")
                 file_id += 1
 
                 print(f"{in_path} -> {out_path}")
