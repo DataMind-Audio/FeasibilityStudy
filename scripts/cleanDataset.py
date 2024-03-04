@@ -58,7 +58,7 @@ class Cleaner():
                 "-i",
                 source_path,
                 "-af",
-                f'pan=mono|c0=c0+c1,silenceremove=stop_periods=-1:stop_duration={self.silence_duration}:stop_threshold={self.silence_threshhold}dB',
+                f'pan=mono|c0=0.5*c0+0.5*c1,silenceremove=stop_periods=-1:stop_duration={self.silence_duration}:stop_threshold={self.silence_threshhold}dB',
                 '-c:a',
                 'pcm_s16le',
                 "-y",
@@ -66,22 +66,22 @@ class Cleaner():
             ]
 
         # Sum to mono and invert phase
-        elif config == 1:
-            destination_path = destination_path[:-4] + "_sumToMonoPhaseInv" + destination_path[-4:]
-            call = [
-                "ffmpeg",
-                "-i",
-                source_path,
-                "-af",
-                f'pan=mono|c0=c0+c1,aeval=-val(0),silenceremove=stop_periods=-1:stop_duration={self.silence_duration}:stop_threshold={self.silence_threshhold}dB',
-                '-c:a',
-                'pcm_s16le',
-                "-y",
-                destination_path
-            ]
+#        elif config == 1:
+#            destination_path = destination_path[:-4] + "_sumToMonoPhaseInv" + destination_path[-4:]
+#            call = [
+#                "ffmpeg",
+#                "-i",
+#                source_path,
+#                "-af",
+#                f'pan=mono|c0=c0+c1,aeval=-val(0),silenceremove=stop_periods=-1:stop_duration={self.silence_duration}:stop_threshold={self.silence_threshhold}dB',
+#                '-c:a',
+#                'pcm_s16le',
+#                "-y",
+#                destination_path
+#            ]
 
         # Take left channel
-        elif config == 2:
+        elif config == 1:
             destination_path = destination_path[:-4] + "_left" + destination_path[-4:]
             call = [
                 "ffmpeg",
@@ -96,22 +96,22 @@ class Cleaner():
             ]
         
         # Take left channel and invert phase
-        elif config == 3:
-            destination_path = destination_path[:-4] + "_leftInv" + destination_path[-4:]
-            call = [
-                "ffmpeg",
-                "-i",
-                source_path,
-                "-af",
-                f'pan=mono|c0=c0,aeval=-val(0),silenceremove=stop_periods=-1:stop_duration={self.silence_duration}:stop_threshold={self.silence_threshhold}dB',
-                '-c:a',
-                'pcm_s16le',
-                "-y",
-                destination_path
-            ]
+#        elif config == 3:
+#            destination_path = destination_path[:-4] + "_leftInv" + destination_path[-4:]
+#            call = [
+#                "ffmpeg",
+#                "-i",
+#                source_path,
+#                "-af",
+#                f'pan=mono|c0=c0,aeval=-val(0),silenceremove=stop_periods=-1:stop_duration={self.silence_duration}:stop_threshold={self.silence_threshhold}dB',
+#                '-c:a',
+#                'pcm_s16le',
+#                "-y",
+#               destination_path
+#            ]
         
         # Take right channel
-        elif config == 4:
+        elif config == 2:
             destination_path = destination_path[:-4] + "_right" + destination_path[-4:]
             call = [
                 "ffmpeg",
@@ -126,19 +126,19 @@ class Cleaner():
             ]
         
         # Take right channel and invert phase
-        elif config == 5:
-            destination_path = destination_path[:-4] + "_rightInv" + destination_path[-4:]
-            call = [
-                "ffmpeg",
-                "-i",
-                source_path,
-                "-af",
-                f'pan=mono|c0=c1,aeval=-val(0),silenceremove=stop_periods=-1:stop_duration={self.silence_duration}:stop_threshold={self.silence_threshhold}dB',
-                '-c:a',
-                'pcm_s16le',
-                "-y",
-                destination_path
-            ]
+#        elif config == 5:
+#            destination_path = destination_path[:-4] + "_rightInv" + destination_path[-4:]
+#            call = [
+#                "ffmpeg",
+#                "-i",
+#                source_path,
+#                "-af",
+#                f'pan=mono|c0=c1,aeval=-val(0),silenceremove=stop_periods=-1:stop_duration={self.silence_duration}:stop_threshold={self.silence_threshhold}dB',
+#                '-c:a',
+#                'pcm_s16le',
+#                "-y",
+#                destination_path
+#            ]
         
         return call
         
@@ -177,9 +177,13 @@ class Cleaner():
             file = str(idx).zfill(8) + "_" + file
             destination_path = os.path.join(self.destination, file)
 
-            audio, sr = sf.read(source_path, always_2d=True)
+            try:
+                audio, sr = sf.read(source_path, always_2d=True)
+            except:
+                print(f'Failed to process file: {source_path}')
+                return idx
 
-            end = 6
+            end = 3
 
             if audio[1].size == 1:
                 end =  2
