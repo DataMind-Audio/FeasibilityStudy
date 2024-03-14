@@ -185,7 +185,10 @@ class Cleaner():
 
             end = 3
 
-            if audio[1].size == 0:
+            try:
+                temp = (audio[1].size == 0)
+                del temp
+            except:
                 print(f'Failed to process file: {source_path}')
                 return idx
 
