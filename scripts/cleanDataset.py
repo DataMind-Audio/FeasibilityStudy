@@ -41,14 +41,14 @@ class Cleaner():
                 file_path = os.path.join(root, file)
                 file_size = os.path.getsize(file_path)
                 size += file_size
-        
+
         return size
 
     def get_dataset_length(self, source_folder, sample_rate=44100):
         size = self.get_dataset_size(source_folder)
         length = size / (sample_rate * 2)
         return length
-    
+
     def get_ffmpeg_call(self, source_path, destination_path, config):
         # Sum to mono
         if config == 0:
@@ -94,7 +94,7 @@ class Cleaner():
                 "-y",
                 destination_path
             ]
-        
+
         # Take left channel and invert phase
 #        elif config == 3:
 #            destination_path = destination_path[:-4] + "_leftInv" + destination_path[-4:]
@@ -109,7 +109,7 @@ class Cleaner():
 #                "-y",
 #               destination_path
 #            ]
-        
+
         # Take right channel
         elif config == 2:
             destination_path = destination_path[:-4] + "_right" + destination_path[-4:]
@@ -124,7 +124,7 @@ class Cleaner():
                 "-y",
                 destination_path
             ]
-        
+
         # Take right channel and invert phase
 #        elif config == 5:
 #            destination_path = destination_path[:-4] + "_rightInv" + destination_path[-4:]
@@ -139,9 +139,9 @@ class Cleaner():
 #                "-y",
 #                destination_path
 #            ]
-        
+
         return call
-        
+
 
     def clean(self):
         print("Calculating dataset size...")
@@ -153,12 +153,12 @@ class Cleaner():
         print(f"Cleaning dataset...")
 
         idx = 0
-        self.ffmpeg_logs = open("ffmpeg_log.txt", "w") 
+        self.ffmpeg_logs = open("ffmpeg_log.txt", "w")
 
         for root, _, files in os.walk(self.source):
             for file in files:
                 idx = self.process_audio(root, file, idx)
-        
+
         print(f"Waiting for {len(self.procs)} processes to finish...", end="")
         for p in self.procs:
             p.wait()
@@ -167,7 +167,7 @@ class Cleaner():
         print(f"\nDone.")
 
         self.end_time = time.time()
-    
+
     def process_audio(self, root, file, idx):
         source_path = os.path.join(root, file)
         self.processed_size = self.processed_size + os.path.getsize(source_path)
@@ -185,12 +185,16 @@ class Cleaner():
 
             end = 3
 
+            if audio[1].size == 0:
+                print(f'Failed to process file: {source_path}')
+                return idx
+
             if audio[1].size == 1:
-                end =  2
-            
+                end =  1
+
             if self.expand == False:
-                end = 1 
-            
+                end = 1
+
             for config in range(0, end):
                 p = subprocess.Popen(self.get_ffmpeg_call(source_path, destination_path, config), stderr=self.ffmpeg_logs)
                 self.procs.append(p)
@@ -208,12 +212,12 @@ class Cleaner():
 
                 idx = idx + 1
 
-            
+
             print("Processed " + str(int(self.processed_size / self.unprocessed_size * 100)) + "%", end="\r")
 
         return idx
 
-    
+
     def log_results(self):
         print("Process took " + str(int(self.end_time - self.start_time)) + " seconds.")
         print("Processed dataset size: " + str(round(self.get_dataset_size(destination_folder) / 1000**3, 2)) + " GBs.")
@@ -229,17 +233,15 @@ if __name__ == "__main__":
 
     source_folder = args.input
     destination_folder = args.output
-    
+
     expand = False
 
     if args.expand == "y":
         expand = True
-    
+
     if not os.path.exists(destination_folder):
       os.makedirs(destination_folder)
 
     cleaner = Cleaner(source_folder, destination_folder, expand)
     cleaner.clean()
     cleaner.log_results()
-
-
