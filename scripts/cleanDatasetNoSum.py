@@ -68,7 +68,7 @@ class Cleaner():
 
 
         # Take left channel
-        elif config == 0:
+        if config == 0:
             destination_path = destination_path[:-4] + "_left" + destination_path[-4:]
             call = [
                 "ffmpeg",
